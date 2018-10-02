@@ -1,0 +1,105 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.server-rsb
+  creationTimestamp: null
+  name: service-entry-server-rsb
+  namespace: default
+spec:
+  endpoints:
+  - address: istio-egressgateway.istio-system.svc.cluster.local
+    ports:
+      http: 80
+  hosts:
+  - server.ns2.svc.cluster.local
+  ports:
+  - name: http
+    number: 80
+    protocol: HTTP
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.server-rsb
+  creationTimestamp: null
+  name: dest-rule-server-rsb-ns2
+  namespace: default
+spec:
+  host: server.ns2.svc.cluster.local
+  trafficPolicy:
+    tls:
+      caCertificates: /etc/certs/root-cert.pem
+      clientCertificate: /etc/certs/cert-chain.pem
+      mode: MUTUAL
+      privateKey: /etc/certs/key.pem
+      sni: server.ns2.svc.cluster.local
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.server-rsb
+  creationTimestamp: null
+  name: istio-egressgateway-server-ns2
+  namespace: default
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - hosts:
+    - server.ns2.svc.cluster.local
+    port:
+      name: server-ns2-80
+      number: 80
+      protocol: TLS
+    tls: {}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.server-rsb
+  creationTimestamp: null
+  name: egressgateway-to-ingressgateway-server-ns2
+  namespace: default
+spec:
+  gateways:
+  - istio-egressgateway-server-ns2
+  hosts:
+  - server.ns2.svc.cluster.local
+  tls:
+  - match:
+    - port: 80
+      sniHosts:
+      - server.ns2.svc.cluster.local
+    route:
+    - destination:
+        host: cluster2.myorg
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.server-rsb
+  creationTimestamp: null
+  name: service-entry-ingress-gateway-cluster2
+  namespace: default
+spec:
+  addresses:
+  - 127.8.8.8
+  endpoints:
+  - address: 169.62.129.93
+    ports:
+      tcp: 80
+  hosts:
+  - cluster2.myorg
+  ports:
+  - name: tcp
+    number: 80
+    protocol: TCP
+  resolution: DNS

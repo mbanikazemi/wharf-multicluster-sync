@@ -1,0 +1,37 @@
+# Expose the "reviews" service
+apiVersion: multicluster.istio.io/v1alpha1
+kind: ServiceExpositionPolicy
+metadata:
+  name: reviews
+spec:
+  exposed:
+  - name: reviews
+    port: 9080
+---
+# Expose the "reviews" service, subset v1 only, only to cluster1, with alternate name
+apiVersion: multicluster.istio.io/v1alpha1
+kind: ServiceExpositionPolicy
+metadata:
+  name: reviews-v1
+spec:
+  exposed:
+  - name: reviews
+    port: 9080
+    alias: reviews-v1
+    subset: v1
+    clusters:
+    - cluster1
+---
+# Expose the "reviews" service, subset v2 only, only to cluster1, with alternate name
+apiVersion: multicluster.istio.io/v1alpha1
+kind: ServiceExpositionPolicy
+metadata:
+  name: reviews-v2
+spec:
+  exposed:
+  - name: reviews
+    port: 9080
+    alias: reviews-v2
+    subset: v2
+    clusters:
+    - cluster1

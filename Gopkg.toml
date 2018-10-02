@@ -1,0 +1,52 @@
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+ignored = [
+  # Get `dep ensure` to shut up about this package
+  "k8s.io/api/scheduling/v1beta1",
+]
+
+[[override]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.10.4"
+
+# https://github.com/kubernetes/client-go#compatibility-matrix
+# for details.
+[[override]]
+  name = "k8s.io/client-go"
+  branch = "release-7.0"	# For K8s 1.10.x
+
+# K8s needs an old mergo, see k8s.io/client-go/tools/clientcmd/client_config.go:166
+# which says "Our mergo.Merge version is older than this change."
+[[override]]
+  name = "github.com/imdario/mergo"
+  revision = "6633656539c1639d9d78127b7d47c622b5d7b6dc"
+
+[prune]
+  go-tests = true
+  unused-packages = true
+
+  

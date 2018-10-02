@@ -1,0 +1,11 @@
+# Like 'reviews-binding.yaml', but with an explicit namespace
+apiVersion: multicluster.istio.io/v1alpha1
+kind: RemoteServiceBinding
+metadata:
+  name: reviews
+spec:
+  remote:
+  - cluster: cluster2
+    services:
+    - name: reviews
+      port: 9080

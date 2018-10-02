@@ -1,0 +1,15 @@
+apiVersion: multicluster.istio.io/v1alpha1
+kind: RemoteServiceBinding
+metadata:
+  creationTimestamp: null
+  labels:
+    connection: live
+  name: cluster-b-services
+  namespace: ns2
+spec:
+  remote:
+  - cluster: cluster-b
+    services:
+    - alias: server
+      name: server
+      namespace: ns2

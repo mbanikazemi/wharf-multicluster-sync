@@ -1,0 +1,54 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.server-rsb
+  creationTimestamp: null
+  name: service-entry-server
+  namespace: default
+spec:
+  endpoints:
+  - address: 169.62.129.93
+    ports:
+      http: 80
+  hosts:
+  - server.ns2.svc.cluster.local
+  ports:
+  - name: http
+    number: 9080
+    protocol: HTTP
+  resolution: STATIC
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.server-rsb
+  creationTimestamp: null
+  name: dest-rule-server
+  namespace: default
+spec:
+  host: server.ns2.svc.cluster.local
+  trafficPolicy:
+    tls:
+      caCertificates: /etc/certs/root-cert.pem
+      clientCertificate: /etc/certs/cert-chain.pem
+      mode: MUTUAL
+      privateKey: /etc/certs/key.pem
+      sni: server.ns2.svc.cluster.local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.server-rsb
+  creationTimestamp: null
+  name: server
+spec:
+  ports:
+  - port: 9080
+    protocol: TCP
+    targetPort: 0
+  type: ClusterIP
+status:
+  loadBalancer: {}

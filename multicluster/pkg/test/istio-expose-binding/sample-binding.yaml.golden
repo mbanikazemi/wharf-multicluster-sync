@@ -1,0 +1,105 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: mynamespace.sample1
+  creationTimestamp: null
+  name: service-entry-sample1
+  namespace: mynamespace
+spec:
+  endpoints:
+  - address: istio-egressgateway.istio-system.svc.cluster.local
+    ports:
+      http: 80
+  hosts:
+  - remoteFooA.my-remote.svc.cluster.local
+  ports:
+  - name: http
+    number: 80
+    protocol: HTTP
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: mynamespace.sample1
+  creationTimestamp: null
+  name: dest-rule-sample1-my-remote
+  namespace: mynamespace
+spec:
+  host: remoteFooA.my-remote.svc.cluster.local
+  trafficPolicy:
+    tls:
+      caCertificates: /etc/certs/root-cert.pem
+      clientCertificate: /etc/certs/cert-chain.pem
+      mode: MUTUAL
+      privateKey: /etc/certs/key.pem
+      sni: remoteFooA.my-remote.svc.cluster.local
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: mynamespace.sample1
+  creationTimestamp: null
+  name: istio-egressgateway-FooA-my-remote
+  namespace: mynamespace
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - hosts:
+    - remoteFooA.my-remote.svc.cluster.local
+    port:
+      name: remoteFooA-my-remote-80
+      number: 80
+      protocol: TLS
+    tls: {}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: mynamespace.sample1
+  creationTimestamp: null
+  name: egressgateway-to-ingressgateway-FooA-my-remote
+  namespace: mynamespace
+spec:
+  gateways:
+  - istio-egressgateway-FooA-my-remote
+  hosts:
+  - remoteFooA.my-remote.svc.cluster.local
+  tls:
+  - match:
+    - port: 80
+      sniHosts:
+      - remoteFooA.my-remote.svc.cluster.local
+    route:
+    - destination:
+        host: clusterc.myorg
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: mynamespace.sample1
+  creationTimestamp: null
+  name: service-entry-ingress-gateway-clusterC
+  namespace: mynamespace
+spec:
+  addresses:
+  - 127.8.8.8
+  endpoints:
+  - address: 1.2.3.4
+    ports:
+      tcp: 80
+  hosts:
+  - clusterc.myorg
+  ports:
+  - name: tcp
+    number: 80
+    protocol: TCP
+  resolution: DNS

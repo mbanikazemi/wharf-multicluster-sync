@@ -1,0 +1,268 @@
+---
+title: istio.multicluster.v1alpha1
+layout: protoc-gen-docs
+generator: protoc-gen-docs
+number_of_entries: 5
+---
+<p>Package holds protos for the Istio Multi-cluster configuration model</p>
+
+<h2 id="RemoteServiceBinding">RemoteServiceBinding</h2>
+<section>
+<p><code>RemoteServiceBinding</code> describes an the remote clusters that the local
+cluster can access along with the remote services exposed by those remote
+clusters. The information in this model allows binding a remote service for
+the use within local mesh.</p>
+
+<p>The following example has a remote service FooA from clusterC mapped into a
+local service called <code>remoteFooA</code> within the <code>istio-remote</code> namespace.
+Another remote service <code>FooB</code> from clusterD is available by its original
+remote name and in the default namespace.</p>
+
+<pre><code class="language-yaml">apiVersion: multicluster.istio.io/v1alpha1
+kind: RemoteServiceBinding
+metadata:
+  name: sample1
+  namespace: mynamespace
+spec:
+  remote:
+  - cluster: clusterC
+    services:
+    - name: FooA
+      alias: remoteFooA
+      namespace: istio-remote
+      port: 9080
+  - cluster: clusterD
+    services:
+    - name: FooB
+</code></pre>
+
+<table class="message-fields">
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr id="RemoteServiceBinding-remote">
+<td><code>remote</code></td>
+<td><code><a href="#RemoteServiceBinding-RemoteCluster">RemoteServiceBinding.RemoteCluster[]</a></code></td>
+<td>
+<p>REQUIRED: One or more remote (donor) clusters that provides remote
+services to be used by local cluster. It is a list of cluster IDs and the
+remote service from each cluster that will be binded to local mesh
+services.</p>
+
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<h2 id="RemoteServiceBinding-RemoteCluster">RemoteServiceBinding.RemoteCluster</h2>
+<section>
+<p>Each remote cluster has an entry in the <code>RemoteServiceBinding</code>. As cluster
+IDs are unique we don&rsquo;t expect two entries with the same name in a single
+binding resource.</p>
+
+<table class="message-fields">
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr id="RemoteServiceBinding-RemoteCluster-cluster">
+<td><code>cluster</code></td>
+<td><code>string</code></td>
+<td>
+<p>REQUIRED: The remote cluster ID (aka donor cluster).</p>
+
+</td>
+</tr>
+<tr id="RemoteServiceBinding-RemoteCluster-services">
+<td><code>services</code></td>
+<td><code><a href="#RemoteServiceBinding-RemoteCluster-RemoteService">RemoteServiceBinding.RemoteCluster.RemoteService[]</a></code></td>
+<td>
+<p>A list of remote service from the donor cluster to be binded into local
+services.</p>
+
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<h2 id="RemoteServiceBinding-RemoteCluster-RemoteService">RemoteServiceBinding.RemoteCluster.RemoteService</h2>
+<section>
+<p>Each exposed service by the donor cluster has a <code>RemoteService</code> entry.</p>
+
+<table class="message-fields">
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr id="RemoteServiceBinding-RemoteCluster-RemoteService-name">
+<td><code>name</code></td>
+<td><code>string</code></td>
+<td>
+<p>REQUIRED: The name of the exposed remote service.</p>
+
+</td>
+</tr>
+<tr id="RemoteServiceBinding-RemoteCluster-RemoteService-alias">
+<td><code>alias</code></td>
+<td><code>string</code></td>
+<td>
+<p>This is an alias that can be used for the local name of the remote
+service. It allows the operator to use a custom service name which
+may not match the remote name. This is an optional field. If not
+specified, the local binded service name will be named like the
+remote service name.</p>
+
+</td>
+</tr>
+<tr id="RemoteServiceBinding-RemoteCluster-RemoteService-namespace">
+<td><code>namespace</code></td>
+<td><code>string</code></td>
+<td>
+<p>A destination namespace where the binded service will be added to.</p>
+
+</td>
+</tr>
+<tr id="RemoteServiceBinding-RemoteCluster-RemoteService-port">
+<td><code>port</code></td>
+<td><code>uint32</code></td>
+<td>
+<p>The port of the exposed service.
+TODO: consider adding support for multiple ports, their types and names.</p>
+
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<h2 id="ServiceExpositionPolicy">ServiceExpositionPolicy</h2>
+<section>
+<p><code>ServiceExpositionPolicy</code> describes an exposition policy for services
+available on the cluster where the policy is deployed. The cluster or
+mesh operator creates this policy object to selectively choose the specific
+service to be available to remote cluster. Each entry for exposed service is
+also accompanied with a list of cluster IDs that can access it. This ensures
+that only identified clusters can access the exposed services and only the
+services selected to be exposed.</p>
+
+<p>The following example exposes v1 of ServiceA from the cluster where it is
+deployed as service FooA to two remote clusters with IDs <code>clusterA</code> and
+<code>clusterB</code>.</p>
+
+<pre><code class="language-yaml">apiVersion: multicluster.istio.io/v1alpha1
+kind: ServiceExpositionPolicy
+metadata:
+  name: sample1
+  namespace: mynamespace
+spec:
+  exposed:
+  - name: ServiceA
+    alias: FooA
+    subset: v1
+    port: 9080
+    clusters:
+    - clusterA
+    - clusterB
+</code></pre>
+
+<table class="message-fields">
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr id="ServiceExpositionPolicy-exposed">
+<td><code>exposed</code></td>
+<td><code><a href="#ServiceExpositionPolicy-ExposedService">ServiceExpositionPolicy.ExposedService[]</a></code></td>
+<td>
+<p>REQUIRED: One or more exposed services. It is a list of services that
+will be exposed by the cluster where this policy is deployed along with
+the details for each service (e.g. alias, subset, etc).</p>
+
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<h2 id="ServiceExpositionPolicy-ExposedService">ServiceExpositionPolicy.ExposedService</h2>
+<section>
+<p>A single exposed service policy holds any information necessary for the
+configuration of both acceptor and donator clusters.</p>
+
+<table class="message-fields">
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr id="ServiceExpositionPolicy-ExposedService-name">
+<td><code>name</code></td>
+<td><code>string</code></td>
+<td>
+<p>REQUIRED: The name of the service to be exposed.</p>
+
+</td>
+</tr>
+<tr id="ServiceExpositionPolicy-ExposedService-alias">
+<td><code>alias</code></td>
+<td><code>string</code></td>
+<td>
+<p>This is an alias that can be used for the exposed name of the service.
+It allows the operator to hide names of in-cluster services and choose
+descriptive names that acceptor clusters operators may find them more
+informative.
+This is an optional field. If not specified, the service name will be
+used as the exposed service name.</p>
+
+</td>
+</tr>
+<tr id="ServiceExpositionPolicy-ExposedService-subset">
+<td><code>subset</code></td>
+<td><code>string</code></td>
+<td>
+<p><code>subset</code> allows the operator to choose a specific subset (service
+version) in cases when there are multiple subsets available for the
+exposed service. Applicable only to services within the mesh. The subset
+ must be defined in a corresponding DestinationRule.</p>
+
+</td>
+</tr>
+<tr id="ServiceExpositionPolicy-ExposedService-port">
+<td><code>port</code></td>
+<td><code>uint32</code></td>
+<td>
+<p>The port of the exposed service.
+TODO: consider adding support for multiple ports, their types and names.</p>
+
+</td>
+</tr>
+<tr id="ServiceExpositionPolicy-ExposedService-clusters">
+<td><code>clusters</code></td>
+<td><code>string[]</code></td>
+<td>
+<p>A list of cluster IDs that are allowed to call the service exposed by
+this cluster.</p>
+
+</td>
+</tr>
+</tbody>
+</table>
+</section>

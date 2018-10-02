@@ -1,0 +1,58 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.cluster-c-services
+  creationTimestamp: null
+  name: service-entry-ratings
+  namespace: default
+spec:
+  endpoints:
+  - address: 1.2.3.4
+    ports:
+      http: 80
+  - address: 1.2.3.5
+    ports:
+      http: 80
+  hosts:
+  - ratings.default.svc.cluster.local
+  ports:
+  - name: http
+    number: 80
+    protocol: HTTP
+  resolution: STATIC
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.cluster-d-services
+  creationTimestamp: null
+  name: dest-rule-ratings
+  namespace: default
+spec:
+  host: ratings.default.svc.cluster.local
+  trafficPolicy:
+    tls:
+      caCertificates: /etc/certs/root-cert.pem
+      clientCertificate: /etc/certs/cert-chain.pem
+      mode: MUTUAL
+      privateKey: /etc/certs/key.pem
+      sni: ratings.default.svc.cluster.local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    multicluster.istio.io/provenance: default.cluster-d-services
+  creationTimestamp: null
+  name: ratings
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 0
+  type: ClusterIP
+status:
+  loadBalancer: {}
